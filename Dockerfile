@@ -12,10 +12,9 @@ RUN apt update
 RUN wget -O - "https://github.com/rabbitmq/signing-keys/releases/download/2.0/rabbitmq-release-signing-key.asc" | apt-key add -
 
 #we get the repositories ppa for rabbit-erlang and rabbitmq
-RUN echo "deb https://dl.bintray.com/rabbitmq/debian xenial main" | tee /etc/apt/sources.list.d/bintray.rabbitmq.list <<EOF
-deb https://dl.bintray.com/rabbitmq-erlang/debian bionic erlang
-deb https://dl.bintray.com/rabbitmq/debian bionic main
-EOF
+RUN echo "deb https://dl.bintray.com/rabbitmq-erlang/debian xenial erlang\ndeb https://dl.bintray.com/rabbitmq/debian xenial main" | tee /etc/apt/sources.list.d/bintray.rabbitmq.list
+
+
 
 
 #we run update after downloading the ppas
