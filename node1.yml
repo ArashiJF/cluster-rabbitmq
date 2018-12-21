@@ -55,18 +55,18 @@
     
     #build the docker image with ubuntu xenial and rabbitmq-server
     - name: build docker image
-      docker_image: name=rabbitimage tag=latest path=/home/ubuntu/ansiblerabbitnodes state=present
+      docker_image: name={{ imagename }} tag={{ tagname }} path=/home/ubuntu/ansiblerabbitnodes state=present
     
     #we start the docker container with all the parameters we have
     - name: create the container
       docker_container:
-        name: rabbit1
+        name: "{{ name_host1 }}"
         detach: yes
-        image: rabbitimage:latest
-        hostname: rabbit1
+        image: "{{ imagename }}:{{ tagname }}"
+        hostname: "{{ name_host1 }}"
         state: started
         env:
-          RABBITMQ_NODENAME: node1
+          RABBITMQ_NODENAME: "{{ rabbit_node1 }}"
         published_ports:
           - "4369:4369"
           - "5671:5671"
@@ -76,12 +76,12 @@
    
     #We need to set up the cookie
     - name: change erlang cookie value
-      command: docker exec rabbit1 /bin/bash -c "echo {{ mycookie }} > /var/lib/rabbitmq/.erlang.cookie"
+      command: docker exec {{ name_host1 }} /bin/bash -c "echo {{ mycookie }} > /var/lib/rabbitmq/.erlang.cookie"
     
     #after changing the cookie we need to restart the container
     - name: restart rabbit1 container
       docker_container:
         name: rabbit1
-        image: rabbitimage:latest
+        image: "{{ imagename }}:{{ tagname }}"
         state: started 
         restart: yes

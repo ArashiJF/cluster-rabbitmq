@@ -3,5 +3,20 @@ rabbit1_ip: 3.17.71.215
 rabbit2_ip: 18.220.92.112
 rabbit3_ip: 52.15.105.180
 
+#name of nodes
+rabbit_node1: node1
+rabbit_node2: node2
+rabbit_node3: node3
+
+#name and hostname
+name_host1: rabbit1
+name_host2: rabbit2
+name_host3: rabbit3
+
+#image name and tag
+
+imagename: rabbitimage
+tagname: finalver
+
 #erlang cookie
 mycookie: SECRETCOOKIE
