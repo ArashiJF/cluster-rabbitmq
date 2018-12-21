@@ -1,0 +1,118 @@
+- hosts: rabbit3
+  remote_user: ubuntu
+  sudo: yes
+  vars_files:
+    - vars.yml
+  #if python2.7 is not installed at the target host
+  gather_facts: False
+  pre_tasks:
+    - name: Install python for Ansible
+      raw: test -e /usr/bin/python || (apt -y update && apt install -y python-minimal)
+      changed_when: False
+    - setup: # aka gather_facts
+
+  tasks:
+    #we follow all the steps taken in order to install docker-ce from the official page
+    - name: install packages needed for docker
+      apt:
+        name: "{{ item }}"
+        update_cache: yes
+      with_items:
+        - apt-transport-https
+        - ca-certificates
+        - curl
+        - software-properties-common
+        - python-pip
+    
+    - name: add docker GPG key
+      apt_key: url=https://download.docker.com/linux/ubuntu/gpg state=present
+    
+    - name: add docker APT repository
+      apt_repository:
+        repo: deb [arch=amd64] https://download.docker.com/linux/ubuntu xenial stable
+      
+    - name: install docker-ce
+      apt:
+        name: "{{ item }}"
+        state: present
+        update_cache: yes
+      with_items:
+        - docker-ce
+    
+    #we use pip install to install the docker module for ansible
+    - name: install docker-py for ansible docker module
+      pip:
+        name: "{{ item }}"
+        state: latest
+      with_items:
+        - docker
+    
+    - name: copy git repository with the dockerfile to the instance
+      git:
+        repo: https://github.com/ArashiJF/cluster-rabbitmq.git
+        dest: /home/ubuntu/ansiblerabbitnodes
+        version: master
+    
+    #build the docker image with ubuntu xenial and rabbitmq-server
+    - name: build docker image
+      docker_image: name={{ imagename }} tag={{ tagname }} path=/home/ubuntu/ansiblerabbitnodes state=present
+    
+    #we start the docker container with all the parameters we have
+    - name: create the container
+      docker_container:
+        name: "{{ name_host3 }}"
+        detach: yes
+        image: "{{ imagename }}:{{ tagname }}"
+        hostname: "{{ name_host3 }}"
+        state: started
+        env:
+          RABBITMQ_NODENAME: "{{ rabbit_node3 }}"
+        published_ports:
+          - "4369:4369"
+          - "5671:5671"
+          - "5672:5672"
+          - "25672:25672"
+          - "35672:35672"
+   
+    #We need to set up the cookie
+    - name: change erlang cookie value
+      command: docker exec {{ name_host3 }} /bin/bash -c "echo {{ mycookie }} > /var/lib/rabbitmq/.erlang.cookie"
+    
+    #after changing the cookie we need to restart the container
+    - name: restart rabbit3 container
+      docker_container:
+        name: "{{ name_host3 }}"
+        image: "{{ imagename }}:{{ tagname }}"
+        state: started 
+        restart: yes
+
+
+    #we need to add the instance1 ip as host in the container
+    - name: add host
+      command: docker exec {{ name_host3 }} /bin/bash -c "echo {{ rabbit1_ip }} {{ name_host1 }} >> /etc/hosts"
+    
+     #we need to add the instance2 ip as host in the container
+    - name: add host
+      command: docker exec {{ name_host3 }} /bin/bash -c "echo {{ rabbit2_ip }} {{ name_host2 }} >> /etc/hosts"
+
+
+    #now we can tell it to cluster with node 1
+    - name: stop rabbitmqctl 
+      command: docker exec {{ name_host3 }} /bin/bash -c "rabbitmqctl stop_app"
+    
+    #we reset the rabbitmqctl service
+    - name: reset rabbitmqctl
+      command: docker exec {{ name_host3 }} /bin/bash -c "rabbitmqctl reset"
+    
+    #we join the node2 with node1
+    - name: cluster join
+      command: docker exec {{ name_host3 }} /bin/bash -c "rabbitmqctl join_cluster {{ rabbit_node1 }}@{{ name_host1 }}"
+    
+    #we start the app again
+    - name: start rabbitmqctl app
+      command: docker exec {{ name_host3 }} /bin/bash -c "rabbitmqctl start_app"
+    
+    #we show the cluster status
+    - name: status of cluster
+      command: docker exec {{ name_host3 }} /bin/bash -c "rabbitmqctl cluster_status"
+  
