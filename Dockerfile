@@ -30,4 +30,4 @@ RUN apt install rabbitmq-server -y
 EXPOSE 4369 5671 5672 25672 35197
 
 #we start the service
-CMD ["rabbitmq-server -detached"]
+CMD ["rabbitmq-server"]
