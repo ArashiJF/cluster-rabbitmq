@@ -1,32 +1,32 @@
 sudo docker run -d \
     --name="rabbit1" \
     --hostname="rabbit1"\
-    -e RABBITMQ_NODENAME="rabbit1" \
+    -e RABBITMQ_NODENAME="node1" \
     --publish="4369:4369" \
     --publish="5671:5671" \
     --publish="5672:5672" \
     --publish="25672:25672" \
-    --publish="35197:35197" \
+    --publish="35672:35672" \
     rabbitimage:latest
     
 sudo docker run -d \
     --name="rabbit2" \
     --hostname="rabbit2"\
-    -e RABBITMQ_NODENAME="rabbit2" \
+    -e RABBITMQ_NODENAME="node2" \
     --publish="4369:4369" \
     --publish="5671:5671" \
     --publish="5672:5672" \
     --publish="25672:25672" \
-    --publish="35197:35197" \
+    --publish="35672:35672" \
     rabbitimage:latest
 
 sudo docker run -d \
     --name="rabbit3" \
     --hostname="rabbit3"\
-    -e RABBITMQ_NODENAME="rabbit3" \
+    -e RABBITMQ_NODENAME="node3" \
     --publish="4369:4369" \
     --publish="5671:5671" \
     --publish="5672:5672" \
     --publish="25672:25672" \
-    --publish="35197:35197" \
+    --publish="35672:35672" \
     rabbitimage:latest
