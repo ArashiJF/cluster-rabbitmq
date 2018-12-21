@@ -1,0 +1,72 @@
+- hosts: rabbit2
+  remote_user: ubuntu
+  sudo: yes
+  vars_files:
+    - vars.yml
+  #if python2.7 is not installed at the target host
+  gather_facts: False
+  pre_tasks:
+    - name: Install python for Ansible
+      raw: test -e /usr/bin/python || (apt -y update && apt install -y python-minimal)
+      changed_when: False
+    - setup: # aka gather_facts
+
+  tasks:
+    #we follow all the steps taken in order to install docker-ce from the official page
+    - name: install packages needed for docker
+      apt:
+        name: "{{ item }}"
+        update_cache: yes
+      with_items:
+        - apt-transport-https
+        - ca-certificates
+        - curl
+        - software-properties-common
+        - python-pip
+    
+    - name: add docker GPG key
+      apt_key: url=https://download.docker.com/linux/ubuntu/gpg state=present
+    
+    - name: add docker APT repository
+      apt_repository:
+        repo: deb [arch=amd64] https://download.docker.com/linux/ubuntu xenial stable
+      
+    - name: install docker-ce
+      apt:
+        name: "{{ item }}"
+        state: present
+        update_cache: yes
+      with_items:
+        - docker-ce
+    
+    #we use pip install to install the docker module for ansible
+    - name: install docker-py for ansible docker module
+      pip:
+        name: "{{ item }}"
+        state: latest
+      with_items:
+        - docker
+    
+    - name: copy git repository with the dockerfile to the instance
+      git:
+        repo: https://github.com/ArashiJF/cluster-rabbitmq.git
+        dest: /home/ubuntu/ansiblerabbitnodes
+        version: master
+    
+    #build the docker image with ubuntu xenial and rabbitmq-server
+    - name: build docker image
+      docker_image: name=rabbitimage tag=latest path=/home/ubuntu/ansiblerabbitnodes state=present
+    
+    #we start the docker container with all the parameters we have
+    - name: create and run container
+      command: docker run -d --name="rabbit2" --hostname="rabbit2" -e RABBITMQ_NODENAME="node2" --publish="4369:4369" --publish="5671:5671" --publish="5672:5672" --publish="25672:25672" --publish="35672:35672" rabbitimage:latest
+    
+
+    #for node 2 we need to add the rabbit1 host we will need to use the command module
+    - name: add rabbit1 host to /etc/hosts in rabbit2
+      command: docker exec echo /bin/bash -c "echo {{ rabbit1_ip }} rabbit1 >> /etc/hosts"
+    
+    #we add the cookie we are gonna use for the cluster
+    - name: 
+
+    #we need to restart container 

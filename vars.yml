@@ -1,0 +1,7 @@
+#instances public ip
+rabbit1_ip: 3.17.71.215
+rabbit2_ip: 18.220.92.112
+rabbit3_ip: 52.15.105.180
+
+#erlang cookie
+mycookie: SECRETCOOKIE
