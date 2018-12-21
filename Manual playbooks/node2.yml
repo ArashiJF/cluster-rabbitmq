@@ -1,8 +1,8 @@
-- hosts: rabbit1
+- hosts: rabbit2
   remote_user: ubuntu
   sudo: yes
   vars_files:
-    - vars.yml
+    - ../vars.yml
   #if python2.7 is not installed at the target host
   gather_facts: False
   pre_tasks:
@@ -60,13 +60,13 @@
     #we start the docker container with all the parameters we have
     - name: create the container
       docker_container:
-        name: "{{ name_host1 }}"
+        name: "{{ name_host2 }}"
         detach: yes
         image: "{{ imagename }}:{{ tagname }}"
-        hostname: "{{ name_host1 }}"
+        hostname: "{{ name_host2 }}"
         state: started
         env:
-          RABBITMQ_NODENAME: "{{ rabbit_node1 }}"
+          RABBITMQ_NODENAME: "{{ rabbit_node2 }}"
         published_ports:
           - "4369:4369"
           - "5671:5671"
@@ -76,20 +76,37 @@
    
     #We need to set up the cookie
     - name: change erlang cookie value
-      command: docker exec {{ name_host1 }} /bin/bash -c "echo {{ mycookie }} > /var/lib/rabbitmq/.erlang.cookie"
+      command: docker exec {{ name_host2 }} /bin/bash -c "echo {{ mycookie }} > /var/lib/rabbitmq/.erlang.cookie"
     
     #after changing the cookie we need to restart the container
-    - name: restart rabbit1 container
+    - name: restart rabbit2 container
       docker_container:
-        name: rabbit1
+        name: "{{ name_host2 }}"
         image: "{{ imagename }}:{{ tagname }}"
         state: started 
         restart: yes
-    
-    #docker-ce version
-    - name: check docker-ce package
-      command: apt show docker-ce package
 
-    #rabbitmq-server package version
-    - name: check rabbitmq-server package
-      command: docker exec {{ name_host1 }} /bin/bash -c "apt show rabbitmq-server package"
+
+    #we need to add the instance1 ip as host in the container
+    - name: add host
+      command: docker exec {{ name_host2 }} /bin/bash -c "echo {{ rabbit1_ip }} {{ name_host1 }} >> /etc/hosts"
+
+    #now we can tell it to cluster with node 1
+    - name: stop rabbitmqctl 
+      command: docker exec {{ name_host2 }} /bin/bash -c "rabbitmqctl stop_app"
+    
+    #we reset the rabbitmqctl service
+    - name: reset rabbitmqctl
+      command: docker exec {{ name_host2 }} /bin/bash -c "rabbitmqctl reset"
+    
+    #we join the node2 with node1
+    - name: cluster join
+      command: docker exec {{ name_host2 }} /bin/bash -c "rabbitmqctl join_cluster {{ rabbit_node1 }}@{{ name_host1 }}"
+    
+    #we start the app again
+    - name: start rabbitmqctl app
+      command: docker exec {{ name_host2 }} /bin/bash -c "rabbitmqctl start_app"
+    
+    #we show the cluster status
+    - name: status of cluster
+      command: docker exec {{ name_host2 }} /bin/bash -c "rabbitmqctl cluster_status"

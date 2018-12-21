@@ -1,0 +1,40 @@
+#this playbook adds all roles to execute them in a single run
+#this part checks if python2,7 is installed in all the target machines
+#if its not installed it installs them.
+#then it calls common role
+- hosts: all
+  remote_user: ubuntu
+  sudo: yes
+  gather_facts: False
+  
+  #if python2.7 is not installed at the target host
+  pre_tasks:
+    - name: Install python for Ansible
+      raw: test -e /usr/bin/python || (apt -y update && apt install -y python-minimal)
+      changed_when: False
+    - setup: # aka gather_facts
+  roles:
+    - common
+
+#role node1 executes specific commands for the node1 of the cluster
+- hosts: rabbit1
+  remote_user: ubuntu
+  sudo: yes
+  roles:
+    - node1
+
+
+#role node2 executes specific commands for the node2 of the cluster
+- hosts: rabbit2
+  remote_user: ubuntu
+  sudo: yes
+  roles:
+    - node2
+
+
+#role node3 executes specific commands for the node3 of the cluster
+- hosts: rabbit3
+  remote_user: ubuntu
+  sudo: yes
+  roles:
+    - node3

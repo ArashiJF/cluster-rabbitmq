@@ -1,8 +1,8 @@
 [rabbit1]
-3.17.71.215 ansible_ssh_private_key_file=/home/arashi-tempesta/Desktop/rabbitmq/awskey
+3.16.57.77 ansible_ssh_private_key_file=/home/arashi-tempesta/Desktop/rabbitmq/awskey
 
 [rabbit2]
-18.220.92.112 ansible_ssh_private_key_file=/home/arashi-tempesta/Desktop/rabbitmq/awskey
+13.58.63.67 ansible_ssh_private_key_file=/home/arashi-tempesta/Desktop/rabbitmq/awskey
 
 [rabbit3]
-52.15.105.180 ansible_ssh_private_key_file=/home/arashi-tempesta/Desktop/rabbitmq/awskey
+18.223.248.23 ansible_ssh_private_key_file=/home/arashi-tempesta/Desktop/rabbitmq/awskey
