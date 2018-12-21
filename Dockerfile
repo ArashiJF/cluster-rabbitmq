@@ -27,7 +27,7 @@ RUN apt install erlang-nox -y
 RUN apt install rabbitmq-server -y
 
 #we expose the needed ports for the nodes to work
-EXPOSE 4369 5671 5672 25672
+EXPOSE 4369 5671 5672 25672 35197
 
 #we start the service
 CMD ["rabbitmq-server"]
