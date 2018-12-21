@@ -85,3 +85,11 @@
         image: "{{ imagename }}:{{ tagname }}"
         state: started 
         restart: yes
+    
+    #docker-ce version
+    - name: check docker-ce package
+      command: apt show docker-ce package
+
+    #rabbitmq-server package version
+    - name: check rabbitmq-server package
+      command: docker exec {{ name_host1 }} /bin/bash -c "apt show rabbitmq-server package"

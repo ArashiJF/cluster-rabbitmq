@@ -115,4 +115,3 @@
     #we show the cluster status
     - name: status of cluster
       command: docker exec {{ name_host3 }} /bin/bash -c "rabbitmqctl cluster_status"
-  
