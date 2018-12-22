@@ -31,4 +31,15 @@
       image: "{{ imagename }}:{{ tagname }}"
       state: started 
       restart: yes
+
+  - name: stop rabbitmqctl 
+    command: docker exec {{ name_host1 }} /bin/bash -c "rabbitmqctl stop_app"
+    
+  #we reset the rabbitmqctl service
+  - name: reset rabbitmqctl
+    command: docker exec {{ name_host1 }} /bin/bash -c "rabbitmqctl reset"
   
+  #we start the app again
+  - name: start rabbitmqctl app
+    command: docker exec {{ name_host1 }} /bin/bash -c "rabbitmqctl start_app"
+    
