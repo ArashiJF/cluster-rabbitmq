@@ -14,6 +14,11 @@
         state: started
         env:
           RABBITMQ_NODENAME: "{{ rabbit_node3 }}"
+        etc_hosts: >
+          {  
+            "{{ name_host1 }}": "{{ rabbit1_ip }}",
+            "{{ name_host2 }}": "{{ rabbit2_ip }}"
+          } 
         published_ports:
           - "4369:4369"
           - "5671:5671"
@@ -30,18 +35,8 @@
       docker_container:
         name: "{{ name_host3 }}"
         image: "{{ imagename }}:{{ tagname }}"
-        state: started 
+        state: started
         restart: yes
-
-
-    #we need to add the instance1 ip as host in the container
-    - name: add host
-      command: docker exec {{ name_host3 }} /bin/bash -c "echo {{ rabbit1_ip }} {{ name_host1 }} >> /etc/hosts"
-    
-     #we need to add the instance2 ip as host in the container
-    - name: add host
-      command: docker exec {{ name_host3 }} /bin/bash -c "echo {{ rabbit2_ip }} {{ name_host2 }} >> /etc/hosts"
-
 
     #now we can tell it to cluster with node 1
     - name: stop rabbitmqctl 
@@ -62,3 +57,16 @@
     #we show the cluster status
     - name: status of cluster
       command: docker exec {{ name_host3 }} /bin/bash -c "rabbitmqctl cluster_status"
+      register: msgcluster
+    - debug: msg="{{ msgcluster.stdout }}"
+
+    #print docker-ce and rabbitmq package version
+    - name: docker-ce ver
+      command: dpkg -s docker-ce
+      register: msgdocker
+    - debug: msg="{{ msgdocker.stdout_lines }}"
+
+    - name: rabbitmq-server
+      command: docker exec {{ name_host3 }} /bin/bash -c "dpkg -s rabbitmq-server"
+      register: msgrabbit
+    - debug: msg="{{ msgrabbit.stdout_lines }}"
